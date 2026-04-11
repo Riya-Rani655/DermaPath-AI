@@ -1,0 +1,359 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DermaPath-AI | Advanced Analysis</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&display=swap" rel="stylesheet">
+    <style>
+        /* Updated Refined Color Palettes */
+        :root {
+            /* Light Mode: Clinical, Trustworthy Blue */
+            --bg-gradient: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+            --container-bg: rgba(255, 255, 255, 0.9);
+            --text-main: #1e293b;
+            --text-sub: #64748b;
+            --accent: #2563eb; 
+            --border: #e2e8f0;
+            --card-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.05);
+            --scan-overlay: rgba(37, 99, 235, 0.05);
+            --btn-hover: #1d4ed8;
+        }
+
+        .dark-mode {
+            /* Dark Mode: Deep Midnight & Neon Accents */
+            --bg-gradient: radial-gradient(circle at top right, #1e293b, #0f172a);
+            --container-bg: rgba(30, 41, 59, 0.8);
+            --text-main: #f8fafc;
+            --text-sub: #94a3b8;
+            --accent: #38bdf8; 
+            --border: #334155;
+            --card-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+            --scan-overlay: rgba(56, 189, 248, 0.1);
+            --btn-hover: #0ea5e9;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Poppins', sans-serif;
+        }
+
+        body {
+            background: var(--bg-gradient);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: background 0.5s ease;
+            padding: 20px;
+        }
+
+        .container {
+            background: var(--container-bg);
+            color: var(--text-main);
+            width: 100%;
+            max-width: 460px;
+            padding: 40px;
+            border-radius: 30px;
+            box-shadow: var(--card-shadow);
+            border: 1px solid var(--border);
+            text-align: center;
+            position: relative;
+            backdrop-filter: blur(12px);
+            transition: transform 0.3s ease;
+            animation: fadeIn 0.8s ease-out;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .theme-toggle {
+            position: absolute;
+            top: 25px;
+            right: 25px;
+            cursor: pointer;
+            width: 45px;
+            height: 45px;
+            background: var(--border);
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 20px;
+            transition: all 0.3s ease;
+        }
+        
+        .theme-toggle:hover { 
+            transform: scale(1.1);
+            background: var(--accent);
+            color: white;
+        }
+
+        h1 { font-size: 28px; margin-bottom: 5px; color: var(--accent); font-weight: 600; }
+        p { font-size: 14px; color: var(--text-sub); margin-bottom: 30px; letter-spacing: 0.5px; }
+
+        .upload-box {
+            border: 2px dashed var(--accent);
+            padding: 40px 20px;
+            border-radius: 20px;
+            background: var(--scan-overlay);
+            cursor: pointer;
+            position: relative;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            margin-bottom: 20px;
+        }
+
+        .upload-box:hover {
+            border-style: solid;
+            background: rgba(102, 126, 234, 0.1);
+            transform: translateY(-3px);
+        }
+
+        #imageInput { position: absolute; inset: 0; opacity: 0; cursor: pointer; }
+        .upload-icon { font-size: 45px; margin-bottom: 15px; display: block; opacity: 0.8; }
+
+        #preview {
+            width: 100%;
+            border-radius: 16px;
+            display: none;
+            margin-bottom: 20px;
+            box-shadow: 0 8px 16px rgba(0,0,0,0.1);
+            border: 3px solid white;
+        }
+
+        button {
+            background: var(--accent);
+            color: white;
+            border: none;
+            width: 100%;
+            padding: 18px;
+            border-radius: 15px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            box-shadow: 0 10px 15px -3px rgba(37, 99, 235, 0.3);
+            transition: all 0.3s ease;
+        }
+
+        button:hover { 
+            background: var(--btn-hover);
+            transform: translateY(-2px);
+            box-shadow: 0 15px 20px -5px rgba(37, 99, 235, 0.4);
+        }
+
+        /* Scan Animation */
+        .analyzing {
+            position: relative;
+            overflow: hidden;
+        }
+        .analyzing::after {
+            content: "";
+            position: absolute;
+            top: -100%;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(to bottom, transparent, var(--accent), transparent);
+            opacity: 0.5;
+            animation: scanLine 2s infinite linear;
+        }
+
+        @keyframes scanLine {
+            0% { top: -100%; }
+            100% { top: 100%; }
+        }
+
+        .loader {
+            display: none;
+            width: 35px;
+            height: 35px;
+            border: 4px solid var(--border);
+            border-top: 4px solid var(--accent);
+            border-radius: 50%;
+            margin: 25px auto;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin { 100% { transform: rotate(360deg); } }
+
+        /* Result Visuals */
+        .result-card {
+            background: var(--border);
+            border-radius: 18px;
+            text-align: left;
+            padding: 20px;
+            margin-top: 25px;
+            animation: slideUp 0.5s ease-out;
+        }
+
+        .result-safe { 
+            background: rgba(16, 185, 129, 0.12) !important; 
+            border-left: 5px solid #10b981; 
+        }
+        .result-danger { 
+            background: rgba(244, 63, 94, 0.12) !important; 
+            border-left: 5px solid #f43f5e; 
+        }
+
+        .conf-container {
+            width: 100%;
+            height: 10px;
+            background: rgba(0,0,0,0.1);
+            border-radius: 10px;
+            margin: 15px 0;
+            overflow: hidden;
+        }
+        .conf-bar { height: 100%; width: 0%; transition: width 1.5s cubic-bezier(0.1, 0, 0.2, 1); background: var(--accent); }
+
+        .disclaimer {
+            font-size: 11px;
+            color: var(--text-sub);
+            margin-top: 35px;
+            line-height: 1.6;
+            opacity: 0.7;
+        }
+
+        @keyframes slideUp { from { opacity: 0; transform: translateY(15px); } to { opacity: 1; transform: translateY(0); } }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <div class="theme-toggle" onclick="toggleTheme()" id="themeBtn">
+        <span id="theme-icon">🌙</span>
+    </div>
+
+    <h1>🩺 DermaPath AI</h1>
+    <p>Precision Deep Learning Diagnostics</p>
+
+    <div class="upload-box" id="dropzone">
+        <span class="upload-icon">📸</span>
+        <span id="file-label" style="font-weight: 500;">Click or Drag Skin Lesion Photo</span>
+        <input type="file" id="imageInput" accept="image/*">
+    </div>
+
+    <div id="preview-container" style="position: relative;">
+        <img id="preview" alt="Scan Preview">
+    </div>
+
+    <button id="analyzeBtn" onclick="performAnalysis()">Launch AI Scan</button>
+
+    <div class="loader" id="loader"></div>
+    <div id="result"></div>
+
+    <div class="disclaimer">
+        <strong>Academic Project:</strong> Results generated by neural networks are for educational purposes only. Always consult a certified Dermatologist for medical concerns.
+    </div>
+</div>
+
+<script>
+    function toggleTheme() {
+        const body = document.body;
+        const icon = document.getElementById("theme-icon");
+        body.classList.toggle("dark-mode");
+        const isDark = body.classList.contains("dark-mode");
+        icon.innerText = isDark ? "☀️" : "🌙";
+        localStorage.setItem("theme", isDark ? "dark" : "light");
+    }
+
+    // Persist Theme
+    if (localStorage.getItem("theme") === "dark") {
+        document.body.classList.add("dark-mode");
+        document.getElementById("theme-icon").innerText = "☀️";
+    }
+
+    // Image Preview Handling
+    document.getElementById("imageInput").addEventListener("change", function() {
+        const file = this.files[0];
+        if (file) {
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                const preview = document.getElementById("preview");
+                preview.src = e.target.result;
+                preview.style.display = "block";
+                document.getElementById("file-label").innerText = "Image Selected: " + file.name;
+                document.getElementById("dropzone").style.padding = "15px";
+            }
+            reader.readAsDataURL(file);
+        }
+    });
+
+    function performAnalysis() {
+        const fileInput = document.getElementById("imageInput");
+        const file = fileInput.files[0];
+        const previewImg = document.getElementById("preview");
+        const loader = document.getElementById("loader");
+        const resultDiv = document.getElementById("result");
+
+        if (!file) {
+            alert("Please upload a lesion image first.");
+            return;
+        }
+
+        // UI State: Loading
+        loader.style.display = "block";
+        resultDiv.innerHTML = "";
+        previewImg.parentElement.classList.add("analyzing");
+
+        const formData = new FormData();
+        formData.append("image", file);
+
+        fetch("http://127.0.0.1:5000/predict", {
+            method: "POST",
+            body: formData
+        })
+        .then(response => response.json())
+        .then(data => {
+            loader.style.display = "none";
+            previewImg.parentElement.classList.remove("analyzing");
+            
+            const predictionText = data.result.toLowerCase();
+            let statusClass = "result-card";
+            let accentColor = "#2563eb"; // default blue
+
+            if (predictionText.includes("malignant") || predictionText.includes("cancer")) {
+                statusClass += " result-danger";
+                accentColor = "#f43f5e";
+            } else if (predictionText.includes("benign") || predictionText.includes("normal")) {
+                statusClass += " result-safe";
+                accentColor = "#10b981";
+            }
+
+            const confidence = (data.confidence * 100).toFixed(1);
+
+            resultDiv.innerHTML = `
+                <div class="${statusClass}">
+                    <div style="font-size: 11px; text-transform: uppercase; letter-spacing: 2px; font-weight: bold; opacity: 0.8;">Analysis Result</div>
+                    <div style="font-size: 22px; font-weight: 600; margin: 10px 0;">${data.result}</div>
+                    <div style="display: flex; justify-content: space-between; font-size: 14px;">
+                        <span>AI Confidence</span>
+                        <span style="font-weight: 600;">${confidence}%</span>
+                    </div>
+                    <div class="conf-container">
+                        <div class="conf-bar" id="bar" style="background: ${accentColor}"></div>
+                    </div>
+                    <div style="font-size: 13px; line-height: 1.5; font-style: italic; opacity: 0.9;">
+                        ${predictionText.includes("malignant") ? 
+                        "🚩 High Priority: This lesion shows irregular patterns; please consult a dermatologist immediately." : 
+                        "✅ Low Risk: Analysis suggests a benign lesion; continue to monitor the area monthly for any changes."}
+                    </div>
+                </div>
+            `;
+
+            setTimeout(() => {
+                document.getElementById('bar').style.width = confidence + "%";
+            }, 100);
+        })
+        .catch(err => {
+            loader.style.display = "none";
+            previewImg.parentElement.classList.remove("analyzing");
+            alert("Error: Ensure your Flask server is running at http://127.0.0.1:5000");
+        });
+    }
+</script>
+</body>
+</html>
