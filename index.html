@@ -302,7 +302,7 @@
         const formData = new FormData();
         formData.append("image", file);
 
-        fetch("https://dermapath-ai.onrender.com/predict", {
+        fetch("http://127.0.0.1:5000/predict", {
             method: "POST",
             body: formData
         })
@@ -351,7 +351,7 @@
         .catch(err => {
             loader.style.display = "none";
             previewImg.parentElement.classList.remove("analyzing");
-            alert("Error: Ensure your Flask server is running at http://127.0.0.1:5000");
+            alert("Analysis failed. Please check your internet connection or try again in a moment.");
         });
     }
 </script>

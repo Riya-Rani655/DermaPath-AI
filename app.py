@@ -10,44 +10,31 @@ import io
 app = Flask(__name__)
 CORS(app)
 
-# --- CONFIGURATION ---
 MODEL_PATH = "skin_model.h5"
-DROPBOX_URL = "https://www.dropbox.com/scl/fi/8c6qg0d0b0vv310l61sma/skin_model.h5?rlkey=9shuwdvh6mhhpklzv2h32roam&st=m57r231b&dl=1"
+# REPLACE THIS with your actual Dropbox link (ending in dl=1)
+DROPBOX_URL = "https://www.dropbox.com/scl/fi/8c6qg0d0b0vv310l61sma/skin_model.h5?rlkey=9shuwdvh6mhhpklzv2h32roam&st=no6h2a4r&dl=1"
 
-# --- AUTO-DOWNLOAD LOGIC ---
+# 1. Automatic Model Downloader
 if not os.path.exists(MODEL_PATH):
-    print("Model not found. Downloading from Dropbox...")
-    response = requests.get(DROPBOX_URL, stream=True)
-    if response.status_code == 200:
-        with open(MODEL_PATH, "wb") as f:
-            for chunk in response.iter_content(chunk_size=8192):
-                if chunk:
-                    f.write(chunk)
-        print("Download complete!")
-    else:
-        print("Error: Could not download model. Check your link.")
+    print("Model not found. Downloading...")
+    r = requests.get(DROPBOX_URL, stream=True)
+    with open(MODEL_PATH, 'wb') as f:
+        for chunk in r.iter_content(chunk_size=8192):
+            f.write(chunk)
+    print("Download complete!")
 
-# Load the model globally so it stays in memory
-print("Loading model...")
+# 2. Load Model
 model = load_model(MODEL_PATH)
-print("Model loaded successfully!")
 
-# --- NEW: HOME ROUTE (Fixes 404 Error) ---
 @app.route('/', methods=['GET'])
 def home():
-    return jsonify({
-        "status": "online",
-        "message": "DermaPath-AI Backend is running successfully!",
-        "endpoint": "/predict"
-    }), 200
+    return jsonify({"status": "online", "message": "DermaPath AI is live!"})
 
 def predict_image(img):
-    img = img.resize((128, 128))
-    img = np.array(img) / 255.0
-    img = img.reshape(1, 128, 128, 3)
-
+    img = img.resize((128,128))
+    img = np.array(img)/255.0
+    img = img.reshape(1,128,128,3)
     prediction = model.predict(img)[0][0]
-
     if prediction > 0.5:
         return "Malignant", float(prediction)
     else:
@@ -56,21 +43,13 @@ def predict_image(img):
 @app.route('/predict', methods=['POST'])
 def predict():
     if 'image' not in request.files:
-        return jsonify({"error": "No image uploaded"}), 400
-        
+        return jsonify({"error": "No image found"}), 400
     file = request.files['image']
-    img = Image.open(file)
-    
-    if img.mode != 'RGB':
-        img = img.convert('RGB')
-
+    img = Image.open(file).convert('RGB')
     result, confidence = predict_image(img)
-
-    return jsonify({
-        "result": result,
-        "confidence": confidence
-    })
+    return jsonify({"result": result, "confidence": confidence})
 
 if __name__ == "__main__":
-    port = int(os.environ.get("PORT", 10000)) # Render uses 10000 often, but PORT env covers it
+    # Use Render's dynamic port
+    port = int(os.environ.get("PORT", 5000))
     app.run(host='0.0.0.0', port=port)
