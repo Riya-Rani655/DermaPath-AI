@@ -34,7 +34,8 @@ def predict():
     
     file = request.files['image']
     img = Image.open(io.BytesIO(file.read())).convert('RGB')
-    img = img.resize((224, 224)) # Adjust this to your model's input size
+    # Updated to 128x128 to match your model training
+    img = img.resize((128, 128))
     
     img_array = np.array(img) / 255.0
     img_array = np.expand_dims(img_array, axis=0)
